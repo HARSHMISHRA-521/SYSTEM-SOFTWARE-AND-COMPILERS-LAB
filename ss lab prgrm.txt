@@ -1,0 +1,1118 @@
+ss lab programs:
+
+1a.>>>>1. a). Write a LEX program to recognize valid arithmetic expression. Identifiers in the 
+expression could be only integers and operators could be + and *. Count the identifiers 
+& operators present and print them separately
+
+%{
+// Definitions Section
+// Declare variables
+int a[] = {0, 0, 0, 0}; // Array to store operator counts (+, -, *, /)
+int i; // Index variable for the 'a' array
+int valid = 1; // Flag to indicate if the expression is valid (1) or invalid (0)
+int opnd = 0; // Operand count
+%}
+
+// Start condition definition
+%x OPER
+
+%% 
+// Rules Section
+
+// Match alphabets (lowercase or uppercase) or digits
+// Set the start condition to OPER and increment the operand count
+[a-z A-Z 0-9]+ {
+    BEGIN OPER;
+    opnd++;
+}
+
+// Match the '+' operator
+<OPER>"+" {
+    // Check if valid is true (1)
+    if (valid) {
+        valid = 0; // Set valid to false (0)
+        i = 0; // Set the index to 0 for the '+' operator
+    } else {
+        ext(); // Call the ext() function to handle error (consecutive operators)
+    }
+}
+
+// Match the '-' operator
+<OPER>"-" {
+    // Check if valid is true (1)
+    if (valid) {
+        valid = 0; // Set valid to false (0)
+        i = 1; // Set the index to 1 for the '-' operator
+    } else {
+        ext(); // Call the ext() function to handle error (consecutive operators)
+    }
+}
+
+// Match the '*' operator
+<OPER>"*" {
+    // Check if valid is true (1)
+    if (valid) {
+        valid = 0; // Set valid to false (0)
+        i = 2; // Set the index to 2 for the '*' operator
+    } else {
+        ext(); // Call the ext() function to handle error (consecutive operators)
+    }
+}
+
+// Match the '/' operator
+<OPER>"/" {
+    // Check if valid is true (1)
+    if (valid) {
+        valid = 0; // Set valid to false (0)
+        i = 3; // Set the index to 3 for the '/' operator
+    } else {
+        ext(); // Call the ext() function to handle error (consecutive operators)
+    }
+}
+
+// Match alphabets (lowercase or uppercase) or digits
+// Increment the operand count and check if valid is false (0)
+<OPER>[a-z A-Z 0-9]+ {
+    opnd++;
+    if (valid == 0) {
+        valid = 1; // Set valid to true (1)
+        a[i]++; // Increment the count for the corresponding operator in the 'a' array
+    } else {
+        ext(); // Call the ext() function to handle error (consecutive operands)
+    }
+}
+
+// Match the end of a line ('\n') when the start condition is OPER
+<OPER>"\n" {
+    if (valid == 0) {
+        ext(); // Call the ext() function to handle error (incomplete expression)
+    } else {
+        return 0; // Return 0 to indicate successful completion of line
+    }
+}
+
+// Match any character except '\n' and call ext() function to handle error (remaining characters on line)
+.\n {
+    ext();
+}
+
+%%
+
+// Main function
+int main() {
+    printf("Enter expression:\n");
+    yylex(); // Call the lexer
+
+    // Print results
+    printf("Valid expression\n");
+    printf("Operands: %d\n", opnd);
+    printf("+= %d\n", a[0]);
+    printf("-= %d\n", a[1]);
+    printf("*= %d\n", a[2]);
+    printf("/= %d\n", a[3]);
+    return 0;
+}
+
+// Function to handle error
+int ext() {
+    printf("Invalid expression\n");
+    exit(0);
+}
+
+
+......................................................................................or.................................................................................................
+
+
+%{
+int a[]={0,0,0,0},i,valid=1,opnd=0;
+%}
+%x OPER
+%% 
+[a-z A-Z 0-9]+ {BEGIN OPER;opnd++;}
+<OPER>"+" {if(valid) {valid=0;i=0;} else ext();}
+<OPER>"-" {if(valid) {valid=0;i=1;} else ext();}
+<OPER>"*" {if(valid) {valid=0;i=2;} else ext();}
+<OPER>"/" {if(valid) {valid=0;i=3;} else ext();}
+<OPER>[a-z A-Z 0-9]+ {opnd++;if(valid==0) {valid=1;a[i]++;}else ext();}
+<OPER>"\n" {if(valid==0) ext();else return 0;}
+.\n ext();
+%%
+
+int main()
+{
+printf("enter expr\n");
+yylex();
+printf("valid\n");
+printf("operands=%d\n",opnd);
+printf("+=%d\n",a[0]);
+printf("-=%d\n",a[1]);
+printf("*=%d\n",a[2]);
+printf("/=%d\n",a[3]);
+}
+int ext()
+{
+printf("invalid\n");
+exit(0);
+}
+
+
+output:
+lex filename.l
+cc lex.yy.c -ll
+./a.out
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+b). Write YACC program to evaluate arithmetic expression involving operators: +, -, 
+*, and /.
+
+                       lex:->
+%{
+#include "y.tab.h"
+extern int yylval;
+%}
+%%
+[0-9]+ {yylval=atoi(yytext); return NUM;}
+[\t] ;
+. {return yytext[0];}
+\n {return 0;}
+%%
+
+          yaac:->
+
+%{
+#include<stdio.h>
+#include<stdlib.h>
+%}
+%token NUM
+%left '+' '-'
+%left '*' '/'
+%%
+S:e {printf("result=%d\n",$$); return 0;}
+;
+e:e'+'e {$$=$1+$3;}
+|e'-'e {$$=$1-$3;}
+|e'*'e {$$=$1*$3;}
+|e'/'e {$$=$1/$3;}
+|'('e')' {$$=$2;}
+|NUM {$$=$1;}
+;
+%%
+main()
+{
+printf("enter expr\n");
+yyparse();
+}
+yyerror()
+{
+printf("error\n");
+exit(0);
+}
+
+output:
+gedit lab1b.l
+gedit lab1b.y
+lex lab1b.l
+yacc -d lab1b.y
+cc lex.yy.c  y. tab. c -ll
+. /a.out
+
+
+...................................................................................................................................
+
+
+2. Develop, Implement and Execute a program using YACC tool to recognize all 
+strings ending with b preceded by n a’s using the grammar a^n b (note: input n value).
+
+
+                                                    Lex Part
+%{
+#include "y.tab.h"
+%}
+%%
+a return A;
+b return B;
+.|\n return yytext[0];
+%%
+
+
+                                                      YACC Part
+
+%{
+#include<stdio.h>
+#include<stdlib.h>
+%}
+%token A B
+%%
+str:S '\n' {return 0;}
+S:A S
+S:B
+;
+%%
+main()
+{
+printf("enter string\n");
+yyparse();
+printf("valid\n");
+}
+
+int yyerror()
+{
+printf("error\n");
+exit(0);
+}
+
+output:
+harsh@harsh-virtual-machine:~$ gedit 2h.l
+harsh@harsh-virtual-machine:~$ gedit 2h.y
+harsh@harsh-virtual-machine:~$ lex 2h.l
+harsh@harsh-virtual-machine:~$ yacc -d 2h.y
+harsh@harsh-virtual-machine:~$ cc lex.yy.c y.tab.c -ll
+
+->
+harsh@harsh-virtual-machine:~$ ./a.out
+Enter the string 
+aaaabb
+error
+harsh@harsh-virtual-machine:~$ ./a.out
+Enter the string 
+aaaaaaab
+valid
+
+
+
+8888888888888888888888888888888888888888888888888888888888888888
+
+
+6. a) Write a LEX program to eliminate comment lines in a C program and copy the 
+resulting program into a separate file.
+
+
+%{
+int cc=0;
+%}
+%x CML CSL
+%%
+"/*" {BEGIN CML; cc++;}
+<CML>. ;
+<CML>"*/" {BEGIN 0;}
+"//" {BEGIN CSL; cc++;}
+<CSL>. ;
+<CSL>\n {BEGIN 0;}
+%%
+int main(int argc, char *argv[])
+{
+if(argc!=3)
+{
+printf("usage is %s <src file> <dest file>\n",argv[0]);
+return;
+}
+yyin=fopen(argv[1],"r");
+yyout=fopen(argv[2],"w");
+yylex();
+printf("no. of comment lines=%d\n",cc);
+}
+
+output:
+harsh@harsh-virtual-machine:~$ gedit 6ha.l
+harsh@harsh-virtual-machine:~$ gedit in.c
+harsh@harsh-virtual-machine:~$ ./a.out in.c ou.c
+
+no of comments line = 2
+
+in.c->
+int main(){
+/*
+harsh    
+*/
+int a =0;
+// 2nd commnet
+return 0;
+}
+
+
+ou.c->
+int main(){
+
+
+
+int a =0;
+return 0;
+}
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+b). Write YACC program to recognize valid identifier, operators and keywords
+in the given text (C program) file.
+
+
+                        Lex File
+
+%{
+#include<stdio.h>
+#include "y.tab.h"
+extern int yylval;
+%}
+%%
+[\t] ;
+[+|-|*|/|<|>|=] {printf("operator is %s\n",yytext);return OP;}
+[0-9]+ {yylval=atoi(yytext);printf("number is %d \n",yylval);return DIGIT;}
+int|char|float|bool|void|for|do|while|if|else|return|main {printf("keyword is %s\n",yytext);return KEY;}
+[a-zA-Z0-9]+ {printf("identifier is %s\n",yytext);return ID;}
+. ;
+%%
+
+
+                                    Yacc File
+
+%{
+#include<stdio.h>
+#include<stdlib.h>
+int id=0,key=0,op=0,dig=0;
+%}
+%token ID KEY OP DIGIT
+%%
+input:
+OP input{op++;}
+|DIGIT input{dig++;}
+|KEY input{key++;}
+|ID input{id++;}
+|DIGIT {dig++;}
+|OP {op++;}
+|KEY {key++;}
+|ID {id++;}
+%%
+extern FILE *yyin;
+int main(int argc,char *argv[])
+{
+yyin=fopen(argv[1],"r");
+yyparse();
+printf("digits = %d\n keywords = %d\n operator = %d\n identifier = %d\n",dig,key,op,id);
+}
+int yyerror()
+{
+printf("invalid\n");
+exit(0);
+}
+
+
+f.c->
+void main(){
+int a;
+float bc;
+char c;
+char ch;
+
+if(a==80)
+      printf("good");
+else
+     printf("bad");
+}
+
+output:
+harsh@harsh-virtual-machine:~$ lex 6b.l
+harsh@harsh-virtual-machine:~$ yacc -d 6b.y
+harsh@harsh-virtual-machine:~$ cc lex.yy.c y.tab.c -ll
+harsh@harsh-virtual-machine:~$ ./a.out f.c
+keyword is void
+keyword is main
+
+keyword is int
+identifier is a
+
+keyword is float
+identifier is bc
+
+keyword is char
+identifier is c
+
+keyword is char
+identifier is ch
+
+
+keyword is if
+identifier is a
+operator is =
+operator is =
+number is 80 
+
+identifier is printf
+identifier is good
+
+keyword is else
+
+identifier is printf
+identifier is bad
+
+
+digits = 1
+ keywords = 8
+ operator = 2
+ identifier = 9
+
+
+***********************************************************************
+
+
+3. Design, develop and implement YACC/C program to construct Predictive / LL(1)
+Parsing Table for the grammar rules: A aBa , B bB | . Use this table to parse the
+sentence: abba$.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// The predictive parsing table
+char table[10][10] = {
+    "NT", "a", "b", "A", "aBa", "Error", "B", "@", "bB"
+};
+
+char buffer[10], stack[10];
+int top = -1;
+
+// Pop the top element from the stack
+char pop() {
+    return stack[top--];
+}
+
+// Push an element onto the stack
+void push(int e) {
+    stack[++top] = e;
+}
+
+// Display the current contents of the stack
+void display_stack() {
+    for (int i = top; i >= 0; i--)
+        printf("%c", stack[i]);
+    printf("\n");
+}
+
+// Retrieve the production rule from the predictive parsing table
+char* parse_table(char stack_top, char input_val) {
+    switch (stack_top) {
+        case 'A':
+            switch (input_val) {
+                case 'a':
+                    return table[4];
+                case 'b':
+                    return table[5];
+            }
+            break;
+        case 'B':
+            switch (input_val) {
+                case 'a':
+                    return table[7];
+                case 'b':
+                    return table[8];
+            }
+    }
+    // If no entry is found in the table, return "error"
+    return table[5];
+}
+
+int main() {
+    int ptr = 0, i = 0;
+    char* str;
+    
+    printf("Enter the String: ");
+    scanf("%s", buffer);
+    
+    // Check if the string ends with a semicolon
+    if (buffer[strlen(buffer) - 1] != ';') {
+        printf("String should end with a ';'\n");
+        exit(0);
+    }
+    
+    // Push the initial stack symbols
+    push('$');
+    push('A');
+    
+    // Parsing loop
+    while (stack[top] != '$' && ptr < strlen(buffer)) {
+        if (stack[top] == buffer[ptr]) {
+            // Match: Pop the top element and advance the input pointer
+            ptr++;
+            printf("1. Element popped is %c\n", pop());
+        } else if (stack[top] == '@') {
+            // Epsilon production: Pop the top element
+            printf("2. Element popped is %c\n", pop());
+        } else {
+            // Non-terminal production: Retrieve the production rule
+            str = parse_table(stack[top], buffer[ptr]);
+            
+            if (strcmp(str, "Error") == 0) {
+                printf("Error in parsing\n");
+                break;
+            }
+            
+            // Pop the top element and push the production rule in reverse order
+            printf("3. Element popped is %c\n", pop());
+            for (i = strlen(str) - 1; i >= 0; i--)
+                push(str[i]);
+        }
+        
+        // Display the current stack contents
+        display_stack();
+    }
+    
+    // Check if the string is accepted
+    if (stack[top] == '$' && buffer[ptr] == ';')
+        printf("String is accepted\n");
+    else
+        printf("String is not accepted\n");
+    
+    return 0;
+}
+
+
+harsh@harsh-virtual-machine:~$ gedit 3.c
+harsh@harsh-virtual-machine:~$ cc 3.c
+harsh@harsh-virtual-machine:~$ ./a.out 
+Enter the String: aaab;
+3. Element popped is A
+aBa$
+1. Element popped is a
+Ba$
+3. Element popped is B
+@a$
+2. Element popped is @
+a$
+1. Element popped is a
+$
+String is not accepted
+harsh@harsh-virtual-machine:~$ ./a.out 
+Enter the String: aba;
+3. Element popped is A
+aBa$
+1. Element popped is a
+Ba$
+3. Element popped is B
+bBa$
+1. Element popped is b
+Ba$
+3. Element popped is B
+@a$
+2. Element popped is @
+a$
+1. Element popped is a
+$
+String is accepted
+
+
+
+***************************************************************************
+
+
+
+5. Design, develop and implement a C/Java program to generate the machine code using 
+Triples for the statement A = -B * (C +D) whose intermediate code in three-address
+form:
+T1 = -B
+T2 = C + D
+T3 = T1 + T2
+A = T3
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<ctype.h>
+char op[2],arg1[5],arg2[5],result[5];
+
+void main()
+{
+	FILE *fp1, *fp2;
+	fp1=fopen("input.txt","r");
+	fp2=fopen("output.txt","w");
+	while(!feof(fp1))
+	{
+		fscanf(fp1,"%s%s%s%s",result,arg1,op,arg2);
+		if(strcmp(op,"+")==0)
+		{
+			fprintf(fp2,"\n MOV R0,%s",arg1);
+			fprintf(fp2,"\n ADD R0,%s",arg2);
+			fprintf(fp2,"\n MOV %s,R0",result);
+		}
+		if(strcmp(op,"*")==0)
+		{
+			fprintf(fp2,"\n MOV R0,%s",arg1);
+			fprintf(fp2,"\n MUL R0,%s",arg2);
+			fprintf(fp2,"\n MOV %s,R0",result);
+		}
+		if(strcmp(op,"-")==0)
+		{
+			fprintf(fp2,"\n MOV R0,%s",arg1);
+			fprintf(fp2,"\n SUB R0,%s",arg2);
+			fprintf(fp2,"\n MOV %s,R0",result);
+		}
+		if(strcmp(op,"/")==0)
+		{
+			fprintf(fp2,"\n MOV R0,%s",arg1);
+			fprintf(fp2,"\n DIV R0,%s",arg2);
+			fprintf(fp2,"\n MOV %s,R0",result);
+		}
+		if(strcmp(op,"=")==0)
+		{
+			fprintf(fp2,"\n MOV R0,%s",arg1);
+			fprintf(fp2,"\n MOV %s,R0",result);
+		}
+	}
+	fclose(fp1);
+	fclose(fp2);
+}
+
+
+
+input.txt->
+T1 -B = ?
+T2  C + D
+T3 T1 + T2
+A T3 = ? 
+
+output:
+harsh@harsh-virtual-machine:~$ cc 5.c
+harsh@harsh-virtual-machine:~$ ./a.out
+harsh@harsh-virtual-machine:~$ cat output.txt
+
+ MOV R0,-B
+ MOV T1,R0
+ MOV R0,C
+ ADD R0,D
+ MOV T2,R0
+ MOV R0,T1
+ ADD R0,T2
+ MOV T3,R0
+ MOV R0,T3
+ MOV A,R0
+ MOV R0,T3
+ MOV A,R0
+
+
+
+=============================================================================
+
+
+
+9. Design, develop and implement a C/C++/Java program to implement page 
+replacement algorithms LRU and FIFO. Assume suitable input required to demonstrate 
+the results.
+
+#include<stdio.h>
+#include<stdlib.h>
+
+int n, nf; // Variables to store the length of page reference sequence and the number of frames
+int ref[30]; // Array to store the page reference sequence
+int p[50]; // Array to simulate the frames
+int hit = 0; // Variable to track page hits
+int i, j = 0, k; // Loop variables
+int pgfaultcnt = 0; // Page fault count
+
+// Function to get input from the user
+void getData() {
+    printf("\nEnter length of page reference sequence: ");
+    scanf("%d", &n);
+    printf("\nEnter the number of frames: ");
+    scanf("%d", &nf);
+    printf("\nEnter the page reference sequence:\n");
+    for (i = 0; i < n; i++)
+        scanf("%d", &ref[i]);
+}
+
+// Function to initialize variables and arrays
+void initialize() {
+    pgfaultcnt = 0;
+    for (i = 0; i < nf; i++)
+        p[i] = 9999;
+}
+
+// Function to check if a page hit occurs
+int isHit(int data) {
+    hit = 0;
+    for (j = 0; j < nf; j++) {
+        if (p[j] == data) {
+            hit = 1;
+            break;
+        }
+    }
+    return hit;
+}
+
+// Function to display the current pages in frames
+void displayPages() {
+    for (k = 0; k < nf; k++)
+        if (p[k] != 9999)
+            printf("%d ", p[k]);
+}
+
+// Function to implement FIFO page replacement algorithm
+void fifo() {
+    int j = 0;
+    initialize();
+    printf("\tPAGE\tFRAMES\tFAULTS\n");
+    for (i = 0; i < n; i++) {
+        printf("\n\t%d\t", ref[i]);
+        if (isHit(ref[i]) == 0) {
+            p[j] = ref[i];
+            j++;
+            displayPages();
+            printf("\tPage fault %d", pgfaultcnt);
+            pgfaultcnt++;
+        } else {
+            displayPages();
+            printf("\tNo page fault");
+        }
+        if (j == nf)
+            j = 0;
+    }
+    printf("\nTotal number of page faults in FIFO: %d", pgfaultcnt);
+}
+
+// Function to implement LRU page replacement algorithm
+void lru() {
+    initialize();
+    int least[50];
+    printf("\t PAGE\tFRAMES\tFAULTS\n");
+    for (i = 0; i < n; i++) {
+        printf("\n\t%d\t", ref[i]);
+        if (isHit(ref[i]) == 0) {
+            for (j = 0; j < nf; j++) {
+                int pg = p[j];
+                int found = 0;
+                for (k = i - 1; k >= 0; k--) {
+                    if (pg == ref[k]) {
+                        least[j] = k;
+                        found = 1;
+                        break;
+                    } else
+                        found = 0;
+                }
+                if (!found)
+                    least[j] = -9999;
+            }
+            int min = 9999;
+            int repindex;
+            for (j = 0; j < nf; j++) {
+                if (least[j] < min) {
+                    min = least[j];
+                    repindex = j;
+                }
+            }
+            p[repindex] = ref[i];
+            displayPages();
+            printf("\tPage fault %d", pgfaultcnt);
+            pgfaultcnt++;
+        } else {
+            displayPages();
+            printf("\tNo page fault!");
+        }
+    }
+    printf("\nTotal number of page faults in LRU: %d", pgfaultcnt);
+}
+
+int main() {
+    int choice, yn;
+    do {
+        printf("Page Replacement Algorithms\n");
+        printf("1. Enter data\n2. FIFO\n3. LRU\n4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+        switch (choice) {
+            case 1:
+                getData();
+                break;
+            case 2:
+                fifo();
+                break;
+            case 3:
+                lru();
+                break;
+            case 4:
+                exit(0);
+        }
+        printf("\nDo you want to continue?\nIf yes, press 1\nIf no, press 0\n");
+        scanf("%d", &yn);
+    } while (yn == 1);
+    return 0;
+}
+
+
+output :
+harsh@harsh-virtual-machine:~$ gedit 9h.c
+harsh@harsh-virtual-machine:~$ cc 9h.c
+harsh@harsh-virtual-machine:~$ ./a.out
+Page Replacement Algorithms
+1. Enter data
+2. FIFO
+3. LRU
+4. Exit
+Enter your choice: 1
+
+Enter length of page reference sequence: 5
+
+Enter the number of frames: 3
+
+Enter the page reference sequence:
+7
+1
+0
+3
+0
+
+Do you want to continue?
+If yes, press 1
+If no, press 0
+1
+Page Replacement Algorithms
+1. Enter data
+2. FIFO
+3. LRU
+4. Exit
+Enter your choice: 2
+	PAGE	FRAMES	FAULTS
+
+	7	7 	Page fault 0
+	1	7 1 	Page fault 1
+	0	7 1 0 	Page fault 2
+	3	3 1 0 	Page fault 3
+	0	3 1 0 	No page fault
+Total number of page faults in FIFO: 4
+Do you want to continue?
+If yes, press 1
+If no, press 0
+1
+Page Replacement Algorithms
+1. Enter data
+2. FIFO
+3. LRU
+4. Exit
+Enter your choice: 3
+	 PAGE	FRAMES	FAULTS
+
+	7	7 	Page fault 0
+	1	7 1 	Page fault 1
+	0	7 1 0 	Page fault 2
+	3	3 1 0 	Page fault 3
+	0	3 1 0 	No page fault!
+Total number of page faults in LRU: 4
+Do you want to continue?
+If yes, press 1
+If no, press 0
+0
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+7. Design, develop and implement a C/C++/Java program to simulate the working of 
+Shortest remaining time and Round Robin (RR) scheduling algorithms. Experiment 
+with different quantum sizes for RR algorithm.
+
+
+#include<stdio.h>
+#include<stdlib.h>
+
+// Function prototypes
+void roundrobin(int, int, int[], int[]);
+void srtf();
+
+int main() {
+    int n, tq, choice;
+    int bt[10], st[10], i, j, k;
+    
+    while (1) {
+        printf("\n1. Round Robin\n2. SRTF\n3. Exit\nEnter the choice: ");
+        scanf("%d", &choice);
+        
+        switch (choice) {
+            case 1:
+                printf("\nRound Robin scheduling algorithm\nEnter the number of processes: ");
+                scanf("%d", &n);
+                
+                printf("\nEnter the burst time for sequences: ");
+                for (i = 0; i < n; i++) {
+                    scanf("%d", &bt[i]);
+                    st[i] = bt[i];
+                }
+                
+                printf("\nEnter the time quantum: ");
+                scanf("%d", &tq);
+                
+                roundrobin(n, tq, st, bt);
+                break;
+                
+            case 2:
+                printf("\n\nShortest Remaining Time First (SRTF)\n");
+                srtf();
+                break;
+                
+            case 3:
+                exit(0);
+                break;
+        }
+    }
+}
+
+// Function to implement Round Robin scheduling algorithm
+void roundrobin(int n, int tq, int st[], int bt[]) {
+    int time = 0, tat[10], wt[10], count = 0, swt = 0, temp1, sq = 0, i, j, k, stat = 0;
+    float awt = 0.0, atat = 0.0;
+    
+    while (1) {
+        for (i = 0, count = 0; i < n; i++) {
+            temp1 = tq;
+            
+            if (st[i] == 0) {
+                count++;
+                continue;
+            }
+            
+            if (st[i] > tq)
+                st[i] = st[i] - tq;
+            else if (st[i] >= 0) {
+                temp1 = st[i];
+                st[i] = 0;
+            }
+            
+            sq = sq + temp1;
+            tat[i] = sq;
+        }
+        
+        if (n == count)
+            break;
+    }
+    
+    for (i = 0; i < n; i++) {
+        wt[i] = tat[i] - bt[i];
+        swt = swt + wt[i];
+        stat = stat + tat[i];
+    }
+    
+    awt = (float) swt / n;
+    atat = (float) stat / n;
+    
+    printf("Process no\t|Burst time\t|Waiting time\t|Turnaround time\n");
+    
+    for (i = 0; i < n; i++)
+        printf("%d\t\t\t%d\t\t\t%d\t\t\t%d\t\t\n", i + 1, bt[i], wt[i], tat[i]);
+    
+    printf("\nAverage waiting time is %f\nAverage turnaround time is %f\n", awt, atat);
+}
+
+
+// Function to implement Shortest Remaining Time First (SRTF) algorithm
+void srtf() {
+    int n, j = 0, st[10], bt[10], rt[10], remain = 0, smallest, time = 0, i, endtime, swt = 0, stat = 0;
+    
+    printf("\nEnter the number of processes: ");
+    scanf("%d", &n);
+    
+    for (i = 0; i < n; i++) {
+        printf("Enter arrival time for p[%d]: ", i + 1);
+        scanf("%d", &st[i]);
+        
+        printf("Enter the burst time for p[%d]: ", i + 1);
+        scanf("%d", &bt[i]);
+        
+        rt[i] = bt[i];
+    }
+    
+    rt[100] = 999;
+    
+    printf("\nProcess\t\tWaiting time\tTurnaround time\n");
+    
+    for (time = 0; remain != n; time++) {
+        smallest = 100;
+        
+        for (i = 0; i < n; i++) {
+            if (st[i] <= time && rt[i] < rt[smallest] && rt[i] > 0)
+                smallest = i;
+        }
+        
+        rt[smallest]--;
+        
+        if (rt[smallest] == 0) {
+            remain++;
+            endtime = time + 1;
+            j = smallest;
+            
+            printf("p[%d]\t\t%d\t\t%d\n", smallest + 1, endtime - bt[j] - st[j], endtime - st[j]);
+            
+            swt += endtime - bt[j] - st[j];
+            stat += endtime - st[j];
+        }
+    }
+    
+    float awt = 0.0, atat = 0.0;
+    
+    awt = (float) swt / n;
+    atat = (float) stat / n;
+    
+    printf("Average waiting time: %f\n", awt);
+    printf("Average turnaround time: %f\n", atat);
+}
+
+
+
+
+output:
+
+harsh@harsh-virtual-machine:~$ gedit 7.c
+harsh@harsh-virtual-machine:~$ cc 7.c
+harsh@harsh-virtual-machine:~$ ./a.out
+
+1. Round Robin
+2. SRTF
+3. Exit
+Enter the choice: 1
+
+Round Robin scheduling algorithm
+Enter the number of processes: 3
+
+Enter the burst time for sequences: 24
+3
+3
+
+Enter the time quantum: 4
+Process no	|Burst time	|Waiting time	|Turnaround time
+1			24			6		30		
+2			3			4		7
+3			3			7		10		
+
+Average waiting time is 5.666667
+Average turnaround time is 15.666667
+
+1. Round Robin
+2. SRTF
+3. Exit
+Enter the choice: 2
+
+
+Shortest Remaining Time First (SRTF)
+
+Enter the number of processes: 4
+Enter arrival time for p[1]: 0
+Enter the burst time for p[1]: 8
+Enter arrival time for p[2]: 1
+Enter the burst time for p[2]: 4
+Enter arrival time for p[3]: 2
+Enter the burst time for p[3]: 9
+Enter arrival time for p[4]: 3
+Enter the burst time for p[4]: 5
+
+Process		Waiting time	Turnaround time
+p[2]		0		4
+p[4]		2		7
+p[1]		9		17
+p[3]		15		24
+Average waiting time: 6.500000
+Average turnaround time: 13.000000
+
+1. Round Robin
+2. SRTF
+3. Exit
+Enter the choice: 3
+
+
+9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
